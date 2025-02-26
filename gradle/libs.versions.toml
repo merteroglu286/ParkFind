@@ -16,9 +16,9 @@ room = "2.6.1"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 kotlinxCoroutinesAndroid = "1.7.3"
 kotlinxCoroutinesCore = "1.7.3"
-playServicesMaps = "21.3.0"
+playServicesMaps = "18.0.0"
 mapUtil = "2.3.0"
-playServicesLocation = "21.3.0"
+playServicesLocation = "18.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
