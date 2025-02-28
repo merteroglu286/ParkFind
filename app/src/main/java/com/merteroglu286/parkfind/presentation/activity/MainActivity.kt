@@ -1,46 +1,98 @@
 package com.merteroglu286.parkfind.presentation.activity
 
+import android.Manifest
+import android.app.Activity
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import android.view.Menu
-import android.view.MenuItem
-import com.merteroglu286.parkfind.R
+import androidx.activity.result.contract.ActivityResultContracts
 import com.merteroglu286.parkfind.databinding.ActivityMainBinding
+import com.merteroglu286.parkfind.domain.preferences.Preferences
+import com.merteroglu286.parkfind.presentation.base.BaseActivity
+import com.merteroglu286.parkfind.utility.GPSUtility
+import com.merteroglu286.parkfind.utility.manager.PermissionManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
+@AndroidEntryPoint
+class MainActivity : BaseActivity<ActivityMainBinding, MainVM>() {
 
-    private lateinit var binding: ActivityMainBinding
+    @Inject
+    lateinit var prefs: Preferences
+
+    @Inject
+    lateinit var permissionManager: PermissionManager
+
+    override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
+
+/*    private var _gpsListener: (isOk: Boolean) -> Unit = { _ -> }
+
+    // GPS ayarlarını açmak için launcher
+    private val locationSettingsLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            _gpsListener.invoke(result.resultCode == Activity.RESULT_OK)
+        }
+
+    // Konum izinlerini istemek için launcher
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+            if (fineLocationGranted || coarseLocationGranted) {
+                // İzin verildiyse GPS kontrolünü yap
+                checkGPS({
+                    // GPS açıldıysa yapılacak işlemler
+                }, {
+                    // GPS açma işlemi başarısız olursa
+                })
+            } else {
+                // İzin reddedildiyse kullanıcıya bilgi ver
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-
+        // Uygulama başladığında izinleri ve GPS'i kontrol et
+        checkLocationPermissionsAndGPS()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
+    // Konum izinlerini kontrol et, izin yoksa iste ve GPS'i aç
+    private fun checkLocationPermissionsAndGPS() {
+        if (permissionManager.checkLocationPermission()) {
+            // İzin varsa GPS durumunu kontrol et
+            checkGPS({
+                // GPS açıldıysa yapılacak işlemler
+            }, {
+                // GPS açma işlemi başarısız olursa
+            })
+        } else {
+            // İzin yoksa, izin iste
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return super.onSupportNavigateUp()
+    // GPS kontrolü
+    fun checkGPS(
+        successCallback: () -> Unit,
+        errorCallback: () -> Unit,
+        notFoundLocationService: (() -> Unit?) = {}
+    ) {
+        GPSUtility.enableLocationSettings(
+            this,
+            locationSettingsLauncher,
+            successCallback,
+            errorCallback,
+            notFoundLocationService
+        )
     }
+
+    fun gpsListener(f: (isOk: Boolean) -> Unit) {
+        _gpsListener = f
+    }*/
 }

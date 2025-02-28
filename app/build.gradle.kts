@@ -21,15 +21,16 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localPropertiesFile = project.rootProject.file("local.properties")
-        val localProperties = Properties()
-        localProperties.load(localPropertiesFile.inputStream())
+        /*
+         val localPropertiesFile = project.rootProject.file("local.properties")
+         val localProperties = Properties()
+         localProperties.load(localPropertiesFile.inputStream())
 
-        resValue(
-            type = "string",
-            name = "GOOGLE_MAP_KEY",
-            value = localProperties.getProperty("google.maps.api.key").toString()
-        )
+         resValue(
+             type = "string",
+             name = "GOOGLE_MAP_KEY",
+             value = localProperties.getProperty("google.maps.api.key").toString()
+         )*/
     }
 
 
