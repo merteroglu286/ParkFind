@@ -153,13 +153,6 @@ abstract class BaseFragment<VB : ViewBinding, VM : BaseViewModel> : Fragment() {
             }
         }.launchIn(lifecycleScope)
 
-        viewModel.successMessage.onEach {
-            hideLoading()
-            when (it) {
-                null -> Unit
-                else -> showSuccessMessage(it, {})
-            }
-        }.launchIn(lifecycleScope)
     }
 
     open fun enableBackButton(backButton: ImageButton) {
@@ -176,8 +169,8 @@ abstract class BaseFragment<VB : ViewBinding, VM : BaseViewModel> : Fragment() {
 
     }
 
-    fun showSuccessMessage(message: String, dismiss: () -> Unit) {
-        activity?.showSuccessPopup(message, dismiss)
+    fun showConfirmPopup(message: String, yesButton: () -> Unit, noButton: () -> Unit) {
+        activity?.showConfirmPopup(message, yesButton, noButton)
     }
 
     fun showErrorPopup(message: String) {

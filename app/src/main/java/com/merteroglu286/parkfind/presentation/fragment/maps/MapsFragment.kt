@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Looper
@@ -14,6 +15,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -25,7 +27,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.merteroglu286.parkfind.R
 import com.merteroglu286.parkfind.databinding.FragmentMapsBinding
@@ -49,6 +53,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     private val turkeyLatLng = LatLng(39.9208, 32.8541)
 
     private var navigatedToSettings = false
+
+    private lateinit var userLatLng: LatLng
 
     private val gpsLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -257,11 +263,16 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     }
 
     private val locationCallback = object : LocationCallback() {
+
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation?.let { location ->
                 Log.i("gpsLog", "Yeni konum alındı: lat: ${location.latitude}, lon: ${location.longitude}")
-                val userLatLng = LatLng(location.latitude, location.longitude)
-                gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f))
+                userLatLng = LatLng(location.latitude, location.longitude)
+                gMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(userLatLng, 15f),
+                    1000, // Animasyon süresi (ms cinsinden, örneğin 1000ms = 1 saniye)
+                    null
+                )
                 if (permissionManager.checkLocationPermission()){
                     gMap.isMyLocationEnabled = true
                 }
@@ -287,5 +298,45 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
 
     fun gpsListener(f: (isOk: Boolean) -> Unit) {
         _gpsListener = f
+    }
+
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.startCamera(cameraLauncher)
+        } else {
+            Toast.makeText(requireContext(), "Kamera izni gerekli", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.getCurrentPhotoUri()?.let { uri ->
+
+            }
+        } else {
+            Toast.makeText(requireContext(), "Fotoğraf çekimi iptal edildi", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    override fun setListeners() {
+        super.setListeners()
+
+        with(binding){
+            btnCamera.setOnClickListener{
+                showConfirmPopup("Kamera ile kaydetmek istiyor musunuz?",{
+                    viewModel.checkAndRequestCameraPermission(requestCameraPermissionLauncher) {
+                        viewModel.startCamera(cameraLauncher)
+                    }
+                },{
+                    gMap.addMarker(MarkerOptions().position(userLatLng)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+                })
+            }
+        }
     }
 }

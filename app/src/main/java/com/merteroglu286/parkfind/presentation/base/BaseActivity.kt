@@ -95,11 +95,11 @@ abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel> : AppCompatAct
 
     }
 
-    fun showSuccessPopup(message: String, dismiss: () -> Unit) {
+    fun showConfirmPopup(message: String, yesButton: () -> Unit, noButton: () -> Unit) {
         val dialog = Dialog(this, R.style.Theme_Dialog)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(false)
-        dialog.setContentView(R.layout.success_layout)
+        dialog.setContentView(R.layout.confirm_layout)
         dialog.window?.let {
             it.setLayout(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -110,16 +110,18 @@ abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel> : AppCompatAct
         }
 
         with(dialog) {
-            findViewById<TextView>(R.id.messageEditText).text = message
+            findViewById<TextView>(R.id.titleTextview).text = message
 
-            findViewById<MaterialButton>(R.id.okButton).setOnClickListener {
+            findViewById<MaterialButton>(R.id.yesButton).setOnClickListener {
                 dialog.dismiss()
+                yesButton()
+            }
+            findViewById<MaterialButton>(R.id.noButton).setOnClickListener {
+                dialog.dismiss()
+                noButton()
             }
         }
-
         dialog.show()
-
-        dialog.setOnDismissListener { dismiss() }
 
     }
 

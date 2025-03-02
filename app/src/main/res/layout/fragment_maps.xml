@@ -1,8 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.fragment.maps.MapsFragment" />
+    tools:context=".presentation.fragment.maps.MapsFragment">
+
+    <!-- Google Maps Fragment -->
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageButton
+        android:id="@+id/btn_parking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/medium_margin"
+        android:layout_marginBottom="@dimen/small_margin"
+        android:background="@drawable/rounded_button"
+        android:padding="10dp"
+        android:src="@drawable/ic_parking"
+        app:layout_constraintBottom_toTopOf="@id/btn_camera"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/silver" />
+
+    <ImageButton
+        android:id="@+id/btn_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/medium_margin"
+        android:background="@drawable/rounded_button"
+        android:padding="10dp"
+        android:src="@drawable/ic_marker"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/silver" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

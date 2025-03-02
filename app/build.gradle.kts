@@ -21,6 +21,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        buildConfigField("String","APPLICATION_ID", "\"$applicationId\"")
+
         /*
          val localPropertiesFile = project.rootProject.file("local.properties")
          val localProperties = Properties()
@@ -53,6 +55,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
