@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.res.Resources
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -18,6 +20,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -29,14 +32,23 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.merteroglu286.parkfind.R
 import com.merteroglu286.parkfind.databinding.FragmentMapsBinding
+import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.presentation.base.BaseFragment
 import com.merteroglu286.parkfind.utility.GPSUtility
+import com.merteroglu286.parkfind.utility.GeocoderUtil
+import com.merteroglu286.parkfind.utility.MapUtils
 import com.merteroglu286.parkfind.utility.manager.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -54,7 +66,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
 
     private var navigatedToSettings = false
 
-    private lateinit var userLatLng: LatLng
+    private var userLatLng: LatLng? = null
+    private var address: String? = null
 
     private val gpsLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -165,11 +178,34 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     override fun onMapReady(googleMap: GoogleMap) {
         gMap = googleMap
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(turkeyLatLng, 5f))
+
+        val lastLatLng = LatLng(getLastLocation().first,getLastLocation().second)
+
+        if (lastLatLng.latitude != 0.0 &&
+            lastLatLng.longitude != 0.0){
+            gMap.addMarker(MarkerOptions().position(lastLatLng)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+        }
+
+        setMapStyle(gMap)
     }
 
     private fun createMap() {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
+    }
+
+    private fun setMapStyle(map: GoogleMap?) {
+        try {
+            val success = map?.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(requireContext(), R.raw.map_style)
+            )
+            if (success == false) {
+                Log.e("GOOGLE_MAP", "Failed to apply map style.")
+            }
+        } catch (e: Resources.NotFoundException) {
+            Log.e("GOOGLE_MAP", "Map style resource not found.", e)
+        }
     }
 
     private val locationPermissionLauncher =
@@ -262,20 +298,51 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         fastestInterval = 2000
     }
 
-    private val locationCallback = object : LocationCallback() {
+    private fun getAddressFromLocation(latLng: LatLng, context: Context): String {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        var addressText = "Adres bulunamadı"
 
+        try {
+            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            if (addresses != null) {
+                if (addresses.isNotEmpty()) {
+                    val address = addresses[0]
+                    val sb = StringBuilder()
+                    for (i in 0..address.maxAddressLineIndex) {
+                        sb.append(address.getAddressLine(i)).append("\n")
+                    }
+                    addressText = sb.toString()
+                }
+            }
+        } catch (e: IOException) {
+            Log.e("Geocoder", "Adres alınırken hata oluştu: ${e.message}")
+        }
+
+        return addressText
+    }
+
+    // Konum güncellemelerini alırken adresi de güncelle
+    private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            locationResult.lastLocation?.let { location ->
+            locationResult.lastLocation.let { location ->
                 Log.i("gpsLog", "Yeni konum alındı: lat: ${location.latitude}, lon: ${location.longitude}")
                 userLatLng = LatLng(location.latitude, location.longitude)
-                gMap.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(userLatLng, 15f),
-                    1000, // Animasyon süresi (ms cinsinden, örneğin 1000ms = 1 saniye)
-                    null
-                )
-                if (permissionManager.checkLocationPermission()){
+
+                if (permissionManager.checkLocationPermission()) {
                     gMap.isMyLocationEnabled = true
                 }
+
+                // Konum alındıktan sonra adresi güncelle
+                if (userLatLng != null){
+                    gMap.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(userLatLng!!, 15f),
+                        1000, // Animasyon süresi (ms cinsinden, örneğin 1000ms = 1 saniye)
+                        null
+                    )
+                    address = getAddressFromLocation(userLatLng!!, requireContext())
+
+                }
+
                 // Konum alındıktan sonra güncellemeleri durdur
                 fusedLocationClient.removeLocationUpdates(this)
             }
@@ -315,7 +382,20 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             viewModel.getCurrentPhotoUri()?.let { uri ->
+                if (userLatLng != null && address != null){
+                    viewModel.insertPark(ParkModel(
+                        lat = userLatLng!!.latitude,
+                        lon = userLatLng!!.longitude,
+                        address = address!!,
+                        time = getCurrentTime(),
+                        imagePath = uri.toString()))
 
+                    gMap.clear()
+                    gMap.addMarker(MarkerOptions().position(userLatLng!!)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+
+                    setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
+                }
             }
         } else {
             Toast.makeText(requireContext(), "Fotoğraf çekimi iptal edildi", Toast.LENGTH_SHORT)
@@ -327,16 +407,44 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         super.setListeners()
 
         with(binding){
-            btnCamera.setOnClickListener{
-                showConfirmPopup("Kamera ile kaydetmek istiyor musunuz?",{
-                    viewModel.checkAndRequestCameraPermission(requestCameraPermissionLauncher) {
-                        viewModel.startCamera(cameraLauncher)
-                    }
-                },{
-                    gMap.addMarker(MarkerOptions().position(userLatLng)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
-                })
+            cameraBtn.setOnClickListener {
+                if (userLatLng != null && address != null) {
+                    showConfirmPopup("Kamera ile kaydetmek istiyor musunuz?", {
+                        viewModel.checkAndRequestCameraPermission(requestCameraPermissionLauncher) {
+                            viewModel.startCamera(cameraLauncher)
+                        }
+                    }, {
+                        viewModel.insertPark(ParkModel(
+                            lat = userLatLng!!.latitude,
+                            lon = userLatLng!!.longitude,
+                            address = address!!,
+                            time = getCurrentTime(),
+                            imagePath = null))
+                        gMap.clear()
+                        gMap.addMarker(MarkerOptions().position(userLatLng!!)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+
+                        setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
+                    })
+                } else {
+                    Toast.makeText(requireContext(), "Konum bilgisi alınamadı", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            parkingBtn.setOnClickListener{
+                viewModel.goHistoryScreen()
+            }
+
+            mapBtn.setOnClickListener{
+                if (getLastLocation() != Pair(0.0,0.0)){
+                    MapUtils.openMap(requireContext(), getLastLocation().first,getLastLocation().second)
+                }
             }
         }
+    }
+
+    fun getCurrentTime(): String {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        return dateFormat.format(Date())
     }
 }

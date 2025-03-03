@@ -186,6 +186,8 @@ abstract class BaseFragment<VB : ViewBinding, VM : BaseViewModel> : Fragment() {
         activity?.hideLoading()
     }
 
+    fun setLastLocation(lat:Double, lon: Double) = preferences.setLastLocation(lat,lon)
+
     fun getLastLocation() = preferences.getLastLocation()
 
 }

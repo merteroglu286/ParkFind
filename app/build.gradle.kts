@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
@@ -71,12 +72,17 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    // navigation
+    implementation (libs.androidx.navigation.fragment.ktx)
+    implementation (libs.androidx.navigation.ui.ktx)
+
     //dagger hilt
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
 
     //room
     implementation (libs.room)
+    implementation (libs.room.ktx)
     ksp(libs.room.compiler)
 
     //coroutines

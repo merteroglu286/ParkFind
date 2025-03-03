@@ -14,7 +14,21 @@
         android:layout_height="match_parent" />
 
     <ImageButton
-        android:id="@+id/btn_parking"
+        android:id="@+id/mapBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/medium_margin"
+        android:layout_marginBottom="@dimen/small_margin"
+        android:background="@drawable/rounded_button"
+        android:padding="10dp"
+        android:src="@drawable/ic_map"
+        app:layout_constraintBottom_toTopOf="@id/parkingBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/silver" />
+
+    <ImageButton
+        android:id="@+id/parkingBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -23,12 +37,12 @@
         android:background="@drawable/rounded_button"
         android:padding="10dp"
         android:src="@drawable/ic_parking"
-        app:layout_constraintBottom_toTopOf="@id/btn_camera"
+        app:layout_constraintBottom_toTopOf="@id/cameraBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="@color/silver" />
 
     <ImageButton
-        android:id="@+id/btn_camera"
+        android:id="@+id/cameraBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"

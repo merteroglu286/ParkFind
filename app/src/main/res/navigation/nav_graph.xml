@@ -9,5 +9,13 @@
         android:id="@+id/mapsFragment"
         android:name="com.merteroglu286.parkfind.presentation.fragment.maps.MapsFragment"
         android:label="fragment_maps"
-        tools:layout="@layout/fragment_maps" />
+        tools:layout="@layout/fragment_maps" >
+        <action
+            android:id="@+id/action_mapsFragment_to_historyFragment"
+            app:destination="@id/historyFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.merteroglu286.parkfind.presentation.fragment.history.HistoryFragment"
+        android:label="HistoryFragment" />
 </navigation>
