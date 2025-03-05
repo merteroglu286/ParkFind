@@ -1,0 +1,16 @@
+object DependenciesVersions {
+    const val CORE_KTX = "1.10.1"
+    const val JUNIT = "4.13.2"
+    const val JUNIT_VERSION = "1.2.1"
+    const val ESPRESSO_CORE = "3.5.1"
+    const val APPCOMPAT = "1.6.1"
+    const val MATERIAL = "1.10.0"
+    const val CONSTRAINTLAYOUT = "2.1.4"
+    const val NAVIGATION = "2.8.8"
+    const val HILT = "2.52"
+    const val ROOM = "2.6.1"
+    const val COROUTINES = "1.7.3"
+    const val PLAY_SERVICES = "18.0.0"
+    const val MAP_UTIL = "2.3.0"
+    const val INDICATOR = "2.1.6"
+}

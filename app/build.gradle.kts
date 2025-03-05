@@ -1,59 +1,69 @@
-import java.util.Properties
-
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.ksp)
-    alias(libs.plugins.hilt)
-    alias(libs.plugins.navigation.safeargs)
-    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
+    id(BuildPlugins.ANDROID_APPLICATION) version PluginVersions.AGP
+    id(BuildPlugins.KOTLIN_ANDROID) version PluginVersions.KOTLIN
+    id(BuildPlugins.KOTLIN_KSP) version PluginVersions.KSP
+    id(BuildPlugins.HILT) version PluginVersions.HILT
+    id(BuildPlugins.NAVIGATION_SAFEARGS) version PluginVersions.NAVIGATION_SAFEARGS
+    id(BuildPlugins.SECRETS_GRADLE_PLUGIN) version PluginVersions.SECRETS_GRADLE_PLUGIN
 }
 
 android {
-    namespace = "com.merteroglu286.parkfind"
-    compileSdk = 34
+    namespace = BuildConfig.APP_ID
+    compileSdk = BuildConfig.COMPILE_SDK_VERSION
 
     defaultConfig {
-        applicationId = "com.merteroglu286.parkfind"
-        minSdk = 24
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        applicationId = BuildConfig.APP_ID
+        minSdk = BuildConfig.MIN_SDK_VERSION
+        targetSdk = BuildConfig.TARGET_SDK_VERSION
+        versionCode = ReleaseConfig.VERSION_CODE
+        versionName = ReleaseConfig.VERSION_NAME
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = TestBuildConfig.TEST_INSTRUMENTATION_RUNNER
 
         buildConfigField("String","APPLICATION_ID", "\"$applicationId\"")
-
-        /*
-         val localPropertiesFile = project.rootProject.file("local.properties")
-         val localProperties = Properties()
-         localProperties.load(localPropertiesFile.inputStream())
-
-         resValue(
-             type = "string",
-             name = "GOOGLE_MAP_KEY",
-             value = localProperties.getProperty("google.maps.api.key").toString()
-         )*/
+        signingConfig = signingConfigs.getByName("debug")
     }
 
 
 
     buildTypes {
-        release {
-            isMinifyEnabled = false
+        getByName(BuildTypes.RELEASE) {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            isMinifyEnabled = Build.Release.isMinifyEnabled
+            enableUnitTestCoverage = Build.Release.enableUnitTestCoverage
+            isDebuggable = Build.Release.isDebuggable
         }
+
+        getByName(BuildTypes.DEBUG) {
+            applicationIdSuffix = Build.Debug.applicationIdSuffix
+            versionNameSuffix = Build.Debug.versionNameSuffix
+            isMinifyEnabled = Build.Debug.isMinifyEnabled
+            enableUnitTestCoverage = Build.Debug.enableUnitTestCoverage
+            isDebuggable = Build.Debug.isDebuggable
+        }
+
+        create(BuildTypes.RELEASE_EXTERNAL_QA) {
+            applicationIdSuffix = Build.ReleaseExternalQa.applicationIdSuffix
+            versionNameSuffix = Build.ReleaseExternalQa.versionNameSuffix
+            isMinifyEnabled = Build.ReleaseExternalQa.isMinifyEnabled
+            enableUnitTestCoverage = Build.ReleaseExternalQa.enableUnitTestCoverage
+            isDebuggable = Build.ReleaseExternalQa.isDebuggable
+        }
+
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -62,38 +72,32 @@ android {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(Dependencies.ANDROIDX_CORE_KTX)
+    implementation(Dependencies.ANDROIDX_APPCOMPAT)
+    implementation(Dependencies.MATERIAL)
+    implementation(Dependencies.CONSTRAINTLAYOUT)
 
-    // navigation
-    implementation (libs.androidx.navigation.fragment.ktx)
-    implementation (libs.androidx.navigation.ui.ktx)
+    testImplementation(TestDependencies.JUNIT)
+    androidTestImplementation(TestDependencies.ANDROIDX_JUNIT)
+    androidTestImplementation(TestDependencies.ANDROIDX_ESPRESSO_CORE)
 
-    //dagger hilt
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
+    implementation(Dependencies.NAVIGATION_FRAGMENT_KTX)
+    implementation(Dependencies.NAVIGATION_UI_KTX)
 
-    //room
-    implementation (libs.room)
-    implementation (libs.room.ktx)
-    ksp(libs.room.compiler)
+    implementation(Dependencies.HILT_ANDROID)
+    ksp(Dependencies.HILT_COMPILER)
 
-    //coroutines
-    implementation (libs.kotlinx.coroutines.core)
-    implementation (libs.kotlinx.coroutines.android)
+    implementation(Dependencies.ROOM)
+    implementation(Dependencies.ROOM_KTX)
+    ksp(Dependencies.ROOM_COMPILER)
 
-    //maps
-    implementation(libs.play.services.maps)
-    implementation(libs.play.services.location)
-    implementation(libs.google.map.utils)
+    implementation(Dependencies.COROUTINES_ANDROID)
+    implementation(Dependencies.COROUTINES_CORE)
 
-    //indicator
-    implementation(libs.indicator)
+    implementation(Dependencies.PLAY_SERVICES_MAPS)
+    implementation(Dependencies.PLAY_SERVICES_LOCATION)
+    implementation(Dependencies.GOOGLE_MAP_UTIL)
+
+    implementation(Dependencies.INDICATOR)
+
 }

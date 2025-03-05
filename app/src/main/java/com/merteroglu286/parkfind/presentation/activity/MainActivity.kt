@@ -5,7 +5,7 @@ import com.merteroglu286.parkfind.presentation.base.BaseActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity<ActivityMainBinding, MainVM>() {
+class MainActivity : BaseActivity<ActivityMainBinding, MainVM>(MainVM::class.java) {
 
     override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 }

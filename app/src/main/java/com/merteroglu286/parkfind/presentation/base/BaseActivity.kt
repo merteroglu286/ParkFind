@@ -14,42 +14,32 @@ import androidx.viewbinding.ViewBinding
 import com.google.android.material.button.MaterialButton
 import com.merteroglu286.parkfind.R
 import com.merteroglu286.parkfind.utility.LoadingDialog
-import com.merteroglu286.parkfind.utility.extension.cast
-import java.lang.reflect.ParameterizedType
 
-abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel> : AppCompatActivity() {
+abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel>(
+    private val viewModelClass: Class<VM>
+) : AppCompatActivity() {
 
     abstract fun getViewBinding(): VB
 
     open fun setListeners() {}
-
     open fun setReceivers() {}
-
     open fun initUI() {}
 
-    private lateinit var viewModel: VM
+    protected lateinit var viewModel: VM
 
     lateinit var binding: VB
-
 
     private var loadingDialog: LoadingDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
 
         binding = getViewBinding()
         setContentView(binding.root)
 
-        val clazz = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[1]
-            .cast<Class<VM>>()
-
-        if (!::viewModel.isInitialized) {
-            viewModel = ViewModelProvider(this)[clazz]
-        }
+        viewModel = ViewModelProvider(this).get(viewModelClass)
 
         initUI()
-
     }
 
     fun showLoading() {
@@ -113,7 +103,7 @@ abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel> : AppCompatAct
         with(dialog) {
             findViewById<TextView>(R.id.titleTextview).text = message
 
-            findViewById<ImageView>(R.id.closeButton).setOnClickListener {
+            findViewById<ImageView>(R.id.closeButton).setOnClickListener{
                 dialog.dismiss()
             }
 
