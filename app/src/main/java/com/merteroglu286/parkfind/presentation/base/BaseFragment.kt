@@ -186,8 +186,12 @@ abstract class BaseFragment<VB : ViewBinding, VM : BaseViewModel> : Fragment() {
         activity?.hideLoading()
     }
 
-    fun setLastLocation(lat:Double, lon: Double) = preferences.setLastLocation(lat,lon)
+    fun setLastLocation(lat: Double, lon: Double) = preferences.setLastLocation(lat, lon)
 
     fun getLastLocation() = preferences.getLastLocation()
+
+    fun setIntroShow(showed: Boolean) = preferences.setIntroShow(showed)
+
+    fun getIntroShow() = preferences.getIntroShow()
 
 }

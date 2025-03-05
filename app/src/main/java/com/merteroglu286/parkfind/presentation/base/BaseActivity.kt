@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -111,6 +112,10 @@ abstract class BaseActivity<VB : ViewBinding, VM : BaseViewModel> : AppCompatAct
 
         with(dialog) {
             findViewById<TextView>(R.id.titleTextview).text = message
+
+            findViewById<ImageView>(R.id.closeButton).setOnClickListener {
+                dialog.dismiss()
+            }
 
             findViewById<MaterialButton>(R.id.yesButton).setOnClickListener {
                 dialog.dismiss()

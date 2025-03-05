@@ -10,12 +10,12 @@ import com.merteroglu286.parkfind.presentation.base.BaseViewModel
 import com.merteroglu286.parkfind.utility.manager.MediaManager
 import com.merteroglu286.parkfind.utility.manager.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @HiltViewModel
 class MapsVM @Inject constructor(
@@ -26,6 +26,21 @@ class MapsVM @Inject constructor(
 
     private val _currentPhotoUri = MutableSharedFlow<Uri?>()
     val currentPhotoUri: SharedFlow<Uri?> = _currentPhotoUri.asSharedFlow()
+
+    fun checkLocationPermission(): Boolean {
+        return permissionManager.hasLocationPermission()
+    }
+
+    fun checkAndRequestLocationPermission(
+        permissionLauncher: ActivityResultLauncher<Array<String>>,
+        onPermissionGranted: () -> Unit
+    ) {
+        if (permissionManager.hasLocationPermission()) {
+            onPermissionGranted()
+        } else {
+            permissionManager.requestLocationPermission(permissionLauncher)
+        }
+    }
 
     fun checkAndRequestCameraPermission(
         permissionLauncher: ActivityResultLauncher<String>,
@@ -49,17 +64,9 @@ class MapsVM @Inject constructor(
         return mediaManager.getCurrentPhotoUri()
     }
 
-    val allParks: Flow<List<ParkModel>> = parkUseCase.getAllParks()
-
     fun insertPark(park: ParkModel) {
         viewModelScope.launch {
             parkUseCase.insertPark(park)
-        }
-    }
-
-    fun deletePark(park: ParkModel) {
-        viewModelScope.launch {
-            parkUseCase.deletePark(park)
         }
     }
 

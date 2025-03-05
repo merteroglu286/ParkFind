@@ -1,15 +1,12 @@
 package com.merteroglu286.parkfind.presentation.fragment.maps
 
-import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Geocoder
-import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Looper
@@ -19,8 +16,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -40,26 +35,20 @@ import com.merteroglu286.parkfind.databinding.FragmentMapsBinding
 import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.presentation.base.BaseFragment
 import com.merteroglu286.parkfind.utility.GPSUtility
-import com.merteroglu286.parkfind.utility.GeocoderUtil
 import com.merteroglu286.parkfind.utility.MapUtils
-import com.merteroglu286.parkfind.utility.manager.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCallback {
 
-    @Inject
-    lateinit var permissionManager: PermissionManager
-
     private var _gpsListener: (isOk: Boolean) -> Unit = { _ -> }
 
-    private lateinit var gMap: GoogleMap
+    private var gMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val turkeyLatLng = LatLng(39.9208, 32.8541)
@@ -74,7 +63,7 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
             if (result.resultCode == Activity.RESULT_OK) {
                 Log.e("gpsLog", "GPS açıldı")
                 _gpsListener(true)
-                startLocationUpdates() // GPS açıldıktan sonra konumu al
+                startLocationUpdates()
             }
         }
 
@@ -86,24 +75,21 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         return FragmentMapsBinding.inflate(inflater, container, attachToParent)
     }
 
-    // initUI fonksiyonunda çağırın
     override fun initUI() {
         super.initUI()
         createMap()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        setupGpsReceiver() // BroadcastReceiver'ı kur
+        setupGpsReceiver()
         checkLocationPermissionsAndGPS()
     }
 
     private lateinit var locationManager: LocationManager
     private var gpsReceiver: BroadcastReceiver? = null
 
-    // GPS durumunu kontrol eden yardımcı fonksiyon
     private fun isGpsEnabled(): Boolean {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
-    // BroadcastReceiver kurulumu
     private fun setupGpsReceiver() {
         locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -114,15 +100,12 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
                     Log.d("GPSReceiver", "GPS durumu değişti: ${if (isGpsOn) "Açık" else "Kapalı"}")
 
                     if (isGpsOn) {
-                        // GPS açıldığında yapılacak işlemler
                         startLocationUpdates()
                         _gpsListener(true)
                     } else {
-                        // GPS kapandığında yapılacak işlemler
                         fusedLocationClient.removeLocationUpdates(locationCallback)
                         _gpsListener(false)
 
-                        // Kullanıcıya GPS'i açması için bir mesaj gösterebilirsiniz
                         Snackbar.make(
                             requireView(),
                             "Konumunuzu görmek için GPS'i açın",
@@ -147,7 +130,6 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
             )
         }
 
-        // İlk durumu kontrol et
         if (::locationManager.isInitialized && isGpsEnabled()) {
             startLocationUpdates()
             _gpsListener(true)
@@ -159,17 +141,20 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
             checkLocationPermissionsAndGPS()
             navigatedToSettings = false
         }
+
+        if (getLastLocation().first == 0.0 &&
+            getLastLocation().second == 0.0 && gMap != null){
+            gMap!!.clear()
+        }
     }
 
     override fun onPause() {
         super.onPause()
 
-        // Alıcıyı kaldır
         if (gpsReceiver != null) {
             requireContext().unregisterReceiver(gpsReceiver)
         }
 
-        // Konum güncellemelerini durdur
         if (::fusedLocationClient.isInitialized) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
@@ -177,13 +162,13 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
 
     override fun onMapReady(googleMap: GoogleMap) {
         gMap = googleMap
-        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(turkeyLatLng, 5f))
+        gMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(turkeyLatLng, 5f))
 
         val lastLatLng = LatLng(getLastLocation().first,getLastLocation().second)
 
         if (lastLatLng.latitude != 0.0 &&
             lastLatLng.longitude != 0.0){
-            gMap.addMarker(MarkerOptions().position(lastLatLng)
+            gMap?.addMarker(MarkerOptions().position(lastLatLng)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
         }
 
@@ -210,19 +195,16 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
-            if (fineLocationGranted || coarseLocationGranted) {
+            if (viewModel.checkLocationPermission()) {
                 Log.e("izinLog", "İzin verilmiş, GPS kontrol ediliyor...")
                 checkGPS({
                     _gpsListener(true)
                     Log.e("gpsLog", "GPS açık")
-                    startLocationUpdates() // GPS açıksa konumu al
+                    startLocationUpdates()
                 }, {
                     _gpsListener(false)
                     Log.e("gpsLog", "GPS kapalı, kullanıcıya uyarı göster")
-                    // GPS açılması gerektiğini belirten bir mesaj gösterebilirsin
                 })
             } else {
                 Log.e("izinLog", "izin verilmedi")
@@ -231,25 +213,18 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         }
 
     private fun checkLocationPermissionsAndGPS() {
-        if (permissionManager.checkLocationPermission()) {
+        viewModel.checkAndRequestLocationPermission(
+            locationPermissionLauncher
+        ) {
             Log.e("izinLog", "İzin verilmiş, GPS kontrol ediliyor...")
             checkGPS({
                 _gpsListener(true)
                 Log.e("gpsLog", "GPS açık")
-                startLocationUpdates() // GPS açıksa konumu al
+                startLocationUpdates()
             }, {
                 _gpsListener(false)
                 Log.e("gpsLog", "GPS kapalı, kullanıcıya uyarı göster")
-                // GPS açılması gerektiğini belirten bir mesaj gösterebilirsin
             })
-        } else {
-            Log.e("izinLog", "izin verilmedi, tekrar istendi")
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
         }
     }
 
@@ -282,7 +257,6 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
             requireActivity(),
             gpsLauncher,
             {
-                // GPS zaten açıksa anlık konum güncellemelerini başlat
                 startLocationUpdates()
                 successCallback()
             },
@@ -291,7 +265,6 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         )
     }
 
-    // MapsFragment sınıfına eklenecek kod
     private val locationRequest = LocationRequest.create().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         interval = 10000
@@ -321,40 +294,33 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         return addressText
     }
 
-    // Konum güncellemelerini alırken adresi de güncelle
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation.let { location ->
                 Log.i("gpsLog", "Yeni konum alındı: lat: ${location.latitude}, lon: ${location.longitude}")
                 userLatLng = LatLng(location.latitude, location.longitude)
 
-                if (permissionManager.checkLocationPermission()) {
-                    gMap.isMyLocationEnabled = true
+                if (viewModel.checkLocationPermission()) {
+                    gMap?.isMyLocationEnabled = true
                 }
 
-                // Konum alındıktan sonra adresi güncelle
                 if (userLatLng != null){
-                    gMap.animateCamera(
+                    gMap?.animateCamera(
                         CameraUpdateFactory.newLatLngZoom(userLatLng!!, 15f),
-                        1000, // Animasyon süresi (ms cinsinden, örneğin 1000ms = 1 saniye)
+                        1000,
                         null
                     )
                     address = getAddressFromLocation(userLatLng!!, requireContext())
 
                 }
 
-                // Konum alındıktan sonra güncellemeleri durdur
                 fusedLocationClient.removeLocationUpdates(this)
             }
         }
     }
 
     private fun startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (viewModel.checkLocationPermission()) {
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -390,8 +356,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
                         time = getCurrentTime(),
                         imagePath = uri.toString()))
 
-                    gMap.clear()
-                    gMap.addMarker(MarkerOptions().position(userLatLng!!)
+                    gMap?.clear()
+                    gMap?.addMarker(MarkerOptions().position(userLatLng!!)
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
 
                     setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
@@ -420,8 +386,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
                             address = address!!,
                             time = getCurrentTime(),
                             imagePath = null))
-                        gMap.clear()
-                        gMap.addMarker(MarkerOptions().position(userLatLng!!)
+                        gMap?.clear()
+                        gMap?.addMarker(MarkerOptions().position(userLatLng!!)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
 
                         setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
@@ -443,7 +409,7 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         }
     }
 
-    fun getCurrentTime(): String {
+    private fun getCurrentTime(): String {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return dateFormat.format(Date())
     }

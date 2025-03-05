@@ -1,6 +1,5 @@
 package com.merteroglu286.parkfind.presentation.adapter
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -8,9 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import com.merteroglu286.parkfind.databinding.ItemParkBinding
 import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.presentation.base.BaseViewHolder
-import com.merteroglu286.parkfind.utility.GeocoderUtil
 import com.merteroglu286.parkfind.utility.extension.toUri
-import kotlin.coroutines.coroutineContext
 
 class ParkAdapter(
     private val onEvent: (Event) -> Unit
@@ -36,7 +33,11 @@ class ParkAdapter(
                 imageView.setImageURI(item.imagePath.toUri())
 
                 goButton.setOnClickListener{
-                    onEvent(Event.OnClickButton(item.lat,item.lon))
+                    onEvent(Event.OnClickGoButton(item.lat,item.lon))
+                }
+
+                deleteButton.setOnClickListener{
+                    onEvent(Event.OnClickDeleteButton(item))
                 }
 
                 binding.root.setOnClickListener {
@@ -68,6 +69,7 @@ class ParkAdapter(
 
     sealed interface Event {
         data class OnClickItem(val item: ParkModel) : Event
-        data class OnClickButton(val lat: Double, val lon: Double) : Event
+        data class OnClickGoButton(val lat: Double, val lon: Double) : Event
+        data class OnClickDeleteButton(val item : ParkModel) : Event
     }
 }

@@ -93,4 +93,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
     implementation(libs.google.map.utils)
+
+    //indicator
+    implementation(libs.indicator)
 }

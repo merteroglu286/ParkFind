@@ -9,6 +9,7 @@ class PreferencesImpl @Inject constructor(context: Context) : Preferences {
 
     private val lastLat = "LAST_LAT"
     private val lastLon = "LAST_LON"
+    private val introShowed = "INTRO_SHOWED"
 
     var mPrefs: SharedPreferences = context.getSharedPreferences("Pref", Context.MODE_PRIVATE)
 
@@ -23,6 +24,16 @@ class PreferencesImpl @Inject constructor(context: Context) : Preferences {
         val lat = mPrefs.getString(lastLat, null)?.toDoubleOrNull() ?: 0.0
         val lng = mPrefs.getString(lastLon, null)?.toDoubleOrNull() ?: 0.0
         return Pair(lat, lng)
+    }
+
+    override fun setIntroShow(showed: Boolean) {
+        return mPrefs.edit()
+            .putBoolean(introShowed,showed)
+            .apply()
+    }
+
+    override fun getIntroShow(): Boolean {
+        return mPrefs.getBoolean(introShowed, false)
     }
 
 }

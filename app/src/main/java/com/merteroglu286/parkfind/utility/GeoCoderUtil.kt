@@ -23,9 +23,7 @@ object GeocoderUtil {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
 
-                // Android sürüm kontrolü
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    // Android 13 ve üzeri için
                     var result: String? = null
                     geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
                         if (addresses.isNotEmpty()) {
@@ -34,7 +32,6 @@ object GeocoderUtil {
                     }
                     return@withContext result
                 } else {
-                    // Android 12 ve altı için
                     val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                     if (!addresses.isNullOrEmpty()) {
                         return@withContext formatAddress(addresses[0])

@@ -31,4 +31,10 @@ class HistoryVM @Inject constructor(
             }
         }
     }
+
+    fun deletePark(park: ParkModel) {
+        viewModelScope.launch {
+            parkUseCase.deletePark(park)
+        }
+    }
 }

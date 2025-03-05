@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.onEach
 class HistoryFragment : BaseFragment<FragmentHistoryBinding, HistoryVM>() {
 
     private val adapter by lazy { ParkAdapter(::parkAdapterHandle) }
-
+    private var lastAddedPark: ParkModel? = null
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -45,16 +45,28 @@ class HistoryFragment : BaseFragment<FragmentHistoryBinding, HistoryVM>() {
     }
 
     private fun handleParks(parks: List<ParkModel>?) {
-        adapter.submitList(parks)
+        parks?.let {
+            lastAddedPark = it.lastOrNull()
+        }
+        adapter.submitList(parks?.reversed())
     }
 
     private fun parkAdapterHandle(event: ParkAdapter.Event) {
         when (event) {
-            is ParkAdapter.Event.OnClickButton -> {
+            is ParkAdapter.Event.OnClickGoButton -> {
                 MapUtils.openMap(
                     requireContext(),
                     event.lat, event.lon
                 )
+            }
+
+            is ParkAdapter.Event.OnClickDeleteButton -> {
+                showConfirmPopup("Bu kaydı silmek istiyor musunuz?", {
+                    if (event.item == lastAddedPark) {
+                        setLastLocation(0.0,0.0)
+                    }
+                    viewModel.deletePark(event.item)
+                }, {})
             }
 
             is ParkAdapter.Event.OnClickItem -> {
