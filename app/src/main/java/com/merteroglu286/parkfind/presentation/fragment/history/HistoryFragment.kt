@@ -2,6 +2,7 @@ package com.merteroglu286.parkfind.presentation.fragment.history
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.merteroglu286.parkfind.R
 import com.merteroglu286.parkfind.databinding.FragmentHistoryBinding
 import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.presentation.adapter.ParkAdapter
@@ -61,12 +62,12 @@ class HistoryFragment : BaseFragment<FragmentHistoryBinding, HistoryVM>() {
             }
 
             is ParkAdapter.Event.OnClickDeleteButton -> {
-                showConfirmPopup("Bu kaydı silmek istiyor musunuz?", {
+                showConfirmPopup(message = getString(R.string.can_you_delete_this), yesButton = {
                     if (event.item == lastAddedPark) {
                         setLastLocation(0.0,0.0)
                     }
                     viewModel.deletePark(event.item)
-                }, {})
+                }, noButton = {})
             }
 
             is ParkAdapter.Event.OnClickItem -> {

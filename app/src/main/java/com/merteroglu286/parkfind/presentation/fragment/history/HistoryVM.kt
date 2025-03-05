@@ -1,6 +1,5 @@
 package com.merteroglu286.parkfind.presentation.fragment.history
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.domain.usecase.ParkUseCase
@@ -26,7 +25,6 @@ class HistoryVM @Inject constructor(
     private fun getParks() {
         viewModelScope.launch {
             parkUseCase.getAllParks().collect { parkList ->
-                Log.d("parkLog",parkList.toString())
                 _parks.emit(parkList)
             }
         }

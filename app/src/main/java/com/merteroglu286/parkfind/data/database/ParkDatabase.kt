@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import com.merteroglu286.parkfind.data.dao.ParkDao
 import com.merteroglu286.parkfind.domain.model.ParkModel
 import com.merteroglu286.parkfind.utility.UriConverter
+import com.merteroglu286.parkfind.utility.constant.DatabaseConstants.DATABASE_NAME
 
 @Database(entities = [ParkModel::class], version = 2, exportSchema = false)
 @TypeConverters(UriConverter::class)
@@ -24,7 +25,7 @@ abstract class ParkDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ParkDatabase::class.java,
-                    "park_database"
+                    DATABASE_NAME
                 )
                     .fallbackToDestructiveMigration()
                     .build()

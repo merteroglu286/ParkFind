@@ -91,7 +91,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     }
 
     private fun setupGpsReceiver() {
-        locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager =
+            requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         gpsReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -106,17 +107,21 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
                         fusedLocationClient.removeLocationUpdates(locationCallback)
                         _gpsListener(false)
 
-                        Snackbar.make(
-                            requireView(),
-                            "Konumunuzu görmek için GPS'i açın",
-                            Snackbar.LENGTH_LONG
-                        ).setAction("Aç") {
-                            checkGPS({}, {})
-                        }.show()
+                        checkGPSSnackbar()
                     }
                 }
             }
         }
+    }
+
+    private fun checkGPSSnackbar() {
+        Snackbar.make(
+            requireView(),
+            getString(R.string.pls_open_gps),
+            Snackbar.LENGTH_LONG
+        ).setAction(getString(R.string.open)) {
+            checkGPS({}, {})
+        }.show()
     }
 
     override fun onResume() {
@@ -143,7 +148,8 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         }
 
         if (getLastLocation().first == 0.0 &&
-            getLastLocation().second == 0.0 && gMap != null){
+            getLastLocation().second == 0.0 && gMap != null
+        ) {
             gMap!!.clear()
         }
     }
@@ -164,12 +170,15 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         gMap = googleMap
         gMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(turkeyLatLng, 5f))
 
-        val lastLatLng = LatLng(getLastLocation().first,getLastLocation().second)
+        val lastLatLng = LatLng(getLastLocation().first, getLastLocation().second)
 
         if (lastLatLng.latitude != 0.0 &&
-            lastLatLng.longitude != 0.0){
-            gMap?.addMarker(MarkerOptions().position(lastLatLng)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+            lastLatLng.longitude != 0.0
+        ) {
+            gMap?.addMarker(
+                MarkerOptions().position(lastLatLng)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker))
+            )
         }
 
         setMapStyle(gMap)
@@ -208,7 +217,7 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
                 })
             } else {
                 Log.e("izinLog", "izin verilmedi")
-                showPermissionDeniedSnackbar()
+                showPermissionDeniedSnackbar(getString(R.string.pls_grant_location_permission))
             }
         }
 
@@ -228,13 +237,13 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         }
     }
 
-    private fun showPermissionDeniedSnackbar() {
+    private fun showPermissionDeniedSnackbar(message: String) {
         val snackbar = Snackbar.make(
             requireView(),
-            "Konum izni gerekiyor. Lütfen izin verin.",
-            Snackbar.LENGTH_INDEFINITE
+            message,
+            Snackbar.LENGTH_LONG
         )
-        snackbar.setAction("Ayarlar") {
+        snackbar.setAction(getString(R.string.settings)) {
             openAppSettings()
         }
         snackbar.show()
@@ -273,7 +282,7 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
 
     private fun getAddressFromLocation(latLng: LatLng, context: Context): String {
         val geocoder = Geocoder(context, Locale.getDefault())
-        var addressText = "Adres bulunamadı"
+        var addressText = getString(R.string.address_not_found)
 
         try {
             val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
@@ -297,14 +306,17 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation.let { location ->
-                Log.i("gpsLog", "Yeni konum alındı: lat: ${location.latitude}, lon: ${location.longitude}")
+                Log.i(
+                    "gpsLog",
+                    "Yeni konum alındı: lat: ${location.latitude}, lon: ${location.longitude}"
+                )
                 userLatLng = LatLng(location.latitude, location.longitude)
 
                 if (viewModel.checkLocationPermission()) {
                     gMap?.isMyLocationEnabled = true
                 }
 
-                if (userLatLng != null){
+                if (userLatLng != null) {
                     gMap?.animateCamera(
                         CameraUpdateFactory.newLatLngZoom(userLatLng!!, 15f),
                         1000,
@@ -339,7 +351,7 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
         if (isGranted) {
             viewModel.startCamera(cameraLauncher)
         } else {
-            Toast.makeText(requireContext(), "Kamera izni gerekli", Toast.LENGTH_SHORT).show()
+            showPermissionDeniedSnackbar(getString(R.string.pls_grant_camera_permission))
         }
     }
 
@@ -348,62 +360,75 @@ class MapsFragment : BaseFragment<FragmentMapsBinding, MapsVM>(), OnMapReadyCall
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             viewModel.getCurrentPhotoUri()?.let { uri ->
-                if (userLatLng != null && address != null){
-                    viewModel.insertPark(ParkModel(
-                        lat = userLatLng!!.latitude,
-                        lon = userLatLng!!.longitude,
-                        address = address!!,
-                        time = getCurrentTime(),
-                        imagePath = uri.toString()))
+                if (userLatLng != null && address != null) {
+                    viewModel.insertPark(
+                        ParkModel(
+                            lat = userLatLng!!.latitude,
+                            lon = userLatLng!!.longitude,
+                            address = address!!,
+                            time = getCurrentTime(),
+                            imagePath = uri.toString()
+                        )
+                    )
 
                     gMap?.clear()
-                    gMap?.addMarker(MarkerOptions().position(userLatLng!!)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+                    gMap?.addMarker(
+                        MarkerOptions().position(userLatLng!!)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker))
+                    )
 
                     setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
                 }
             }
-        } else {
-            Toast.makeText(requireContext(), "Fotoğraf çekimi iptal edildi", Toast.LENGTH_SHORT)
-                .show()
         }
     }
 
     override fun setListeners() {
         super.setListeners()
 
-        with(binding){
+        with(binding) {
             cameraBtn.setOnClickListener {
                 if (userLatLng != null && address != null) {
-                    showConfirmPopup("Kamera ile kaydetmek istiyor musunuz?", {
+                    showConfirmPopup(getString(R.string.can_you_save_with_camera), {
                         viewModel.checkAndRequestCameraPermission(requestCameraPermissionLauncher) {
                             viewModel.startCamera(cameraLauncher)
                         }
                     }, {
-                        viewModel.insertPark(ParkModel(
-                            lat = userLatLng!!.latitude,
-                            lon = userLatLng!!.longitude,
-                            address = address!!,
-                            time = getCurrentTime(),
-                            imagePath = null))
+                        viewModel.insertPark(
+                            ParkModel(
+                                lat = userLatLng!!.latitude,
+                                lon = userLatLng!!.longitude,
+                                address = address!!,
+                                time = getCurrentTime(),
+                                imagePath = null
+                            )
+                        )
                         gMap?.clear()
-                        gMap?.addMarker(MarkerOptions().position(userLatLng!!)
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker)))
+                        gMap?.addMarker(
+                            MarkerOptions().position(userLatLng!!)
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker))
+                        )
 
                         setLastLocation(userLatLng!!.latitude, userLatLng!!.longitude)
                     })
                 } else {
-                    Toast.makeText(requireContext(), "Konum bilgisi alınamadı", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(),
+                        getString(R.string.location_not_found), Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
 
-            parkingBtn.setOnClickListener{
+            parkingBtn.setOnClickListener {
                 viewModel.goHistoryScreen()
             }
 
-            mapBtn.setOnClickListener{
-                if (getLastLocation() != Pair(0.0,0.0)){
-                    MapUtils.openMap(requireContext(), getLastLocation().first,getLastLocation().second)
+            mapBtn.setOnClickListener {
+                if (getLastLocation() != Pair(0.0, 0.0)) {
+                    MapUtils.openMap(
+                        requireContext(),
+                        getLastLocation().first,
+                        getLastLocation().second
+                    )
                 }
             }
         }

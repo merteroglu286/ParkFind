@@ -1,12 +1,25 @@
 <resources>
     <string name="app_name">ParkFind</string>
-    <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
 
     <string name="google_map_api_key">AIzaSyBDhYY9gKhihV22AFQrEyoFRSJeaMCEhB8</string>
+
+    <string name="settings">Ayarlar</string>
     <string name="please_select">Lütfen seçiniz</string>
+    <string name="can_you_delete_this">Bu kaydı silmek istiyor musunuz?</string>
+    <string name="pls_open_gps">Konumunuzu görmek için GPS\'i açın</string>
+    <string name="open">Aç</string>
+    <string name="pls_grant_location_permission">Konum izni gerekiyor. Lütfen izin verin.</string>
+    <string name="address_not_found">Adres bulunamadı</string>
+    <string name="pls_grant_camera_permission">Kamera izni gerekiyor. Lütfen izin verin.</string>
+    <string name="can_you_save_with_camera">Kamera ile kaydetmek istiyor musunuz?</string>
+    <string name="location_not_found">Konum bilgisi alınamadı</string>
+    <string name="no">Hayır</string>
+    <string name="yes">Evet</string>
+    <string name="ok">Tamam</string>
+    <string name="last_parks">Geçmiş Park Yerlerim</string>
+    <string name="how_to_use">Nasıl Kullanılır ?</string>
+    <string name="start">Başla</string>
+    <string name="address">Adres</string>
+    <string name="date">Tarih</string>
+    <string name="go">Git</string>
 </resources>
