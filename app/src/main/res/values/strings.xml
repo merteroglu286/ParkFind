@@ -1,8 +1,6 @@
 <resources>
     <string name="app_name">ParkFind</string>
 
-    <string name="google_map_api_key">AIzaSyBDhYY9gKhihV22AFQrEyoFRSJeaMCEhB8</string>
-
     <string name="settings">Ayarlar</string>
     <string name="please_select">Lütfen seçiniz</string>
     <string name="can_you_delete_this">Bu kaydı silmek istiyor musunuz?</string>
