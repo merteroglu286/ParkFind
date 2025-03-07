@@ -1,3 +1,4 @@
+import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
@@ -6,12 +7,16 @@ plugins {
     id(BuildPlugins.KOTLIN_KSP) version PluginVersions.KSP
     id(BuildPlugins.HILT) version PluginVersions.HILT
     id(BuildPlugins.NAVIGATION_SAFEARGS) version PluginVersions.NAVIGATION_SAFEARGS
-    id(BuildPlugins.SECRETS_GRADLE_PLUGIN) version PluginVersions.SECRETS_GRADLE_PLUGIN
+//    id(BuildPlugins.SECRETS_GRADLE_PLUGIN) version PluginVersions.SECRETS_GRADLE_PLUGIN
 }
 
 android {
     namespace = BuildConfig.APP_ID
     compileSdk = BuildConfig.COMPILE_SDK_VERSION
+
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    val localProperties = Properties()
+    localProperties.load(localPropertiesFile.inputStream())
 
     defaultConfig {
         applicationId = BuildConfig.APP_ID
@@ -23,11 +28,7 @@ android {
         testInstrumentationRunner = TestBuildConfig.TEST_INSTRUMENTATION_RUNNER
 
         buildConfigField("String","APPLICATION_ID", "\"$applicationId\"")
-        signingConfig = signingConfigs.getByName("debug")
 
-        val localPropertiesFile = project.rootProject.file("local.properties")
-        val localProperties = Properties()
-        localProperties.load(localPropertiesFile.inputStream())
 
         resValue(
             type = "string",
@@ -36,7 +37,19 @@ android {
         )
     }
 
+    signingConfigs {
+        create("release") {
+            val myKeystorePath = localProperties.getProperty("keystore.path") ?: ""
+            val myKeystorePassword = localProperties.getProperty("keystore.password") ?: ""
+            val myKeyAlias = localProperties.getProperty("key.alias") ?: ""
+            val myKeyPassword = localProperties.getProperty("key.password") ?: ""
 
+            storeFile = myKeystorePath.let { if (it.isNotEmpty()) file(it) else null }
+            storePassword = myKeystorePassword
+            keyAlias = myKeyAlias
+            keyPassword = myKeyPassword
+        }
+    }
 
     buildTypes {
         getByName(BuildTypes.RELEASE) {
@@ -47,6 +60,7 @@ android {
             isMinifyEnabled = Build.Release.isMinifyEnabled
             enableUnitTestCoverage = Build.Release.enableUnitTestCoverage
             isDebuggable = Build.Release.isDebuggable
+            signingConfig = signingConfigs.getByName("release")
         }
 
         getByName(BuildTypes.DEBUG) {
